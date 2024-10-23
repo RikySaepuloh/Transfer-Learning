@@ -164,3 +164,6 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+logs/events.out.tfevents.1729656905.MSI.15240.0
+logs/events.out.tfevents.1729657241.MSI.10232.0
+logs/events.out.tfevents.1729658109.MSI.12904.0

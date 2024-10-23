@@ -1,7 +1,7 @@
 import json
 import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments
+from torch.utils.data import Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 
 # Mengatur perangkat untuk penggunaan GPU jika tersedia
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -39,14 +39,14 @@ class ChildMarriageDataset(Dataset):
 # Memuat dataset
 dataset = ChildMarriageDataset('child_marriage_data.jsonl')
 
-# Menggunakan model GPT-2 dan tokenizer
-tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+# Menggunakan model DialoGPT dan tokenizer
+tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
 
 # Menambahkan pad_token menggunakan eos_token
 tokenizer.pad_token = tokenizer.eos_token
 
-# Memuat model GPT-2
-model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
+# Memuat model DialoGPT
+model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium").to(device)
 
 # Tokenisasi dan encoding untuk dataset
 class ChildMarriageTensorDataset(Dataset):
@@ -69,7 +69,7 @@ class ChildMarriageTensorDataset(Dataset):
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
-            'labels': labels  # GPT-2 memerlukan 'labels' untuk menghitung loss
+            'labels': labels  # DialoGPT memerlukan 'labels' untuk menghitung loss
         }
 
 # Siapkan data untuk fine-tuning
@@ -79,7 +79,7 @@ train_dataset = ChildMarriageTensorDataset(dataset.data)
 training_args = TrainingArguments(
     output_dir='./results',
     num_train_epochs=3,
-    per_device_train_batch_size=4,  # Menggunakan batch kecil untuk model GPT-2
+    per_device_train_batch_size=4,  # Menggunakan batch kecil untuk model DialoGPT
     per_device_eval_batch_size=4,
     warmup_steps=500,
     weight_decay=0.01,
@@ -89,7 +89,7 @@ training_args = TrainingArguments(
     save_total_limit=2,
 )
 
-# Membuat Trainer untuk fine-tuning GPT-2
+# Membuat Trainer untuk fine-tuning DialoGPT
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -103,7 +103,7 @@ trainer.train()
 # Fungsi untuk menghasilkan respons
 def generate_response(user_input):
     # Tokenisasi input dengan padding
-    inputs = tokenizer.encode(user_input, return_tensors="pt", padding=True, truncation=True).to(device)
+    inputs = tokenizer.encode(user_input + tokenizer.eos_token, return_tensors="pt", padding=True, truncation=True).to(device)
     
     # Menghasilkan respons dari model
     outputs = model.generate(inputs, max_length=150, num_return_sequences=1, 
