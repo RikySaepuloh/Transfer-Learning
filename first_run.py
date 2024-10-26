@@ -1,9 +1,6 @@
-# Program dengan model yang dapat disimpan sehingga tidak perlu melakukan run ulang
-# Yang perlu diubah, tokenizer (line 47) dan model (line 54)
-
 import json
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments
 
 # Mengatur perangkat untuk penggunaan GPU jika tersedia
@@ -44,14 +41,12 @@ dataset = ChildMarriageDataset('child_marriage_data.jsonl')
 
 # Menggunakan model GPT-2 dan tokenizer
 tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-# tokenizer = GPT2Tokenizer.from_pretrained(output_dir) #tokenizer dari model yang telah disimpan
 
 # Menambahkan pad_token menggunakan eos_token
 tokenizer.pad_token = tokenizer.eos_token
 
 # Memuat model GPT-2
 model = GPT2LMHeadModel.from_pretrained("gpt2").to(device)
-# model = GPT2LMHeadModel.from_pretrained(output_dir).to(device) #model dari hasil run yang telah disimpan
 
 # Tokenisasi dan encoding untuk dataset
 class ChildMarriageTensorDataset(Dataset):
@@ -102,34 +97,10 @@ trainer = Trainer(
     tokenizer=tokenizer,
 )
 
-# Melatih model
+# Melatih model dari awal
 trainer.train()
 
 # Simpan model dan tokenizer setelah training
 output_dir = './saved_model'
-
 model.save_pretrained(output_dir)
 tokenizer.save_pretrained(output_dir)
-
-# Memuat kembali model dan tokenizer dari disk
-model = GPT2LMHeadModel.from_pretrained(output_dir).to(device)
-tokenizer = GPT2Tokenizer.from_pretrained(output_dir)
-
-# Fungsi untuk menghasilkan respons
-def generate_response(user_input):
-    # Tokenisasi input dengan padding
-    inputs = tokenizer.encode(user_input, return_tensors="pt", padding=True, truncation=True).to(device)
-    
-    # Menghasilkan respons dari model yang sudah dilatih
-    outputs = model.generate(inputs, max_length=150, num_return_sequences=1, 
-                             no_repeat_ngram_size=2, do_sample=True, top_k=50, top_p=0.95, 
-                             pad_token_id=tokenizer.pad_token_id)
-    
-    # Decode respons menjadi teks
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response
-
-# Contoh penggunaan model yang dimuat
-user_question = "Kak, keluarga aku nggak punya uang, terus ada orang yang mau menikah sama aku dan bisa bantuin ekonomi keluarga. Kalau aku nikah muda, keluargaku bisa jadi lebih baik, kan?"
-response = generate_response(user_question)
-print(f"Predicted response: {response}")
