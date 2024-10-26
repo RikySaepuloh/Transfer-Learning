@@ -37,7 +37,7 @@ class ChildMarriageDataset(Dataset):
         return self.data[idx]
 
 # Memuat dataset
-dataset = ChildMarriageDataset('dataset.jsonl')
+dataset = ChildMarriageDataset('child_marriage_data.jsonl')
 
 # Menggunakan IndoBERT dan tokenizer
 tokenizer = BertTokenizer.from_pretrained('indobenchmark/indobert-base-p2')
