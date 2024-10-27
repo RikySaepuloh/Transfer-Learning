@@ -64,7 +64,7 @@ def continue_response(previous_response, last_few_words, max_tokens=300):
     return generate_response(user_input_followup, max_tokens=max_tokens)
 
 # Contoh penggunaan
-user_question = "Kak, aku udah nggak bisa sekolah lagi karena biaya. Daripada nganggur, mending nikah aja kan?"
+user_question = "umur berapa boleh menikah?"
 response = generate_response(user_question, max_tokens=300)
 
 print(f"Predicted response: {response}")

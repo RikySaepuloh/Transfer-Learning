@@ -56,16 +56,18 @@ def generate_response_streaming(user_input):
     collected_response = []
     for chunk in response:
         if 'choices' in chunk:
-            chunk_message = chunk['choices'][0].get('delta', {}).get('content', '')
-            collected_response.append(chunk_message)
-            print(chunk_message, end='', flush=True)  # Menampilkan hasil secara real-time
+            delta = chunk['choices'][0].get('delta', {})
+            chunk_message = delta.get('content', '')
+            if chunk_message:  # Validasi apakah chunk_message tidak kosong
+                collected_response.append(chunk_message)
+                print(chunk_message, end='', flush=True)  # Menampilkan hasil secara real-time
 
     # Menggabungkan semua potongan menjadi satu respons
     return ''.join(collected_response)
 
 # Fungsi untuk melanjutkan respons jika terpotong (pagination)
 def generate_full_response(user_input, max_tokens=500):
-    collected_response = generate_response_streaming(user_input, max_tokens)
+    collected_response = generate_response_streaming(user_input)
     
     # Loop untuk memeriksa apakah respons terpotong dan melanjutkan
     while True:
@@ -76,7 +78,7 @@ def generate_full_response(user_input, max_tokens=500):
         # Jika respons terpotong, minta model untuk melanjutkan
         last_few_words = " ".join(collected_response.split()[-10:])  # Ambil 10 kata terakhir
         user_input = f"Lanjutkan dari '{last_few_words}'"
-        collected_response += generate_response_streaming(user_input, max_tokens)
+        collected_response += generate_response_streaming(user_input)
 
     return collected_response
 
